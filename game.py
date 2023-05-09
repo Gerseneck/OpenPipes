@@ -36,6 +36,8 @@ class Game:
     board: dict[tuple[int, int], tile] = field(init=False, default_factory=dict)
 
     selected: tile = field(init=False, default=None)
+    connected: int = field(init=False, default=0)
+    required: int = field(init=False)
 
     font_30: pygame.font.Font = field(init=False)
     font_42: pygame.font.Font = field(init=False)
@@ -67,8 +69,9 @@ class Game:
             if self.board[i].strict:
                 draw_centered_text(self.canvas, self.font_30.render('X', True, 0x000000), 125 + 50 * i[0], 125 + 50 * i[1])
 
-    def draw_board(self, level: int) -> None:
+    def create_board(self, level: int) -> None:
         # generate board
+        self.required = len(LEVELS[level]['nodes']) // 2
         for i in LEVELS[level]['nodes']:
             self.board[i.coord] = tile(i.color)
         for i in range(LEVELS[level]['size']):
@@ -80,7 +83,7 @@ class Game:
 
     def run_game(self, level: int) -> None:
         self.mode = mode.PLAYING
-        self.draw_board(level)
+        self.create_board(level)
         clear_canvas(self.canvas)
         self.update_board()
 
@@ -96,9 +99,8 @@ class Game:
                 mouse_pos = pygame.mouse.get_pos()
                 for i, j in self.board:
                     t1 = self.board[(i, j)]
-                    if t1.hit_box.collidepoint(mouse_pos) and not self.selected and t1.color != color.gray and not t1.clicked:
+                    if t1.hit_box.collidepoint(mouse_pos) and t1.strict and t1.color != color.gray and not t1.clicked:
                         self.selected = self.board[(i, j)]
-                        print(self.board[(i, j)])
 
             if self.selected and event.type == pygame.MOUSEMOTION:
                 mouse_pos = pygame.mouse.get_pos()
@@ -106,11 +108,15 @@ class Game:
                 for i, j in self.board:
                     t1 = self.board[(i, j)]
                     if t1.hit_box.collidepoint(mouse_pos):
-                        is_color_nearby = any([b.color == select_color for b in get_nearby(self.board, i, j)])
+                        is_color_nearby = any([b.color == select_color for b in get_nearby(self.board, i, j) if (b.strict and b == self.selected) or not b.strict])
+                        print(is_color_nearby)
                         if t1.strict and is_color_nearby and t1 != self.selected and t1.color == select_color:
                             self.selected.clicked = True
                             self.selected = None
+                            self.connected += 1
                             t1.clicked = True
+                            if self.connected == self.required:
+                                print('a')
                         if t1.strict:
                             continue
                         if is_color_nearby:
