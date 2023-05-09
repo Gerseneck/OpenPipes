@@ -13,7 +13,6 @@ if TYPE_CHECKING:
 from util import *
 from data.level import LEVELS
 
-
 TITLE_W = 270
 TITLE_H = 35
 RESULT_W = 85
@@ -38,6 +37,7 @@ class Game:
     selected: tile = field(init=False, default=None)
     connected: int = field(init=False, default=0)
     required: int = field(init=False)
+    level_name: str = field(init=False)
 
     font_30: pygame.font.Font = field(init=False)
     font_42: pygame.font.Font = field(init=False)
@@ -63,13 +63,16 @@ class Game:
         draw_centered_text(self.canvas, self.font_42.render('Start', True, 0xffffffff),
                            self.main.x_center, 250)
 
-    def update_board(self):
+    def _update_board(self):
+        self.canvas.blit(self.font_30.render(self.level_name, True, 0x11ff11ff), (5, 5))
         for i in self.board:
-            self.board[i].hit_box = draw.rect(self.canvas, self.board[i].color, pygame.Rect(100 + 50 * i[0], 100 + 50 * i[1], 50, 50), False)
+            self.board[i].hit_box = draw.rect(self.canvas, self.board[i].color,
+                                              pygame.Rect(100 + 50 * i[0], 100 + 50 * i[1], 50, 50), False)
             if self.board[i].strict:
-                draw_centered_text(self.canvas, self.font_30.render('X', True, 0x000000), 125 + 50 * i[0], 125 + 50 * i[1])
+                draw_centered_text(self.canvas, self.font_30.render('X', True, 0x000000), 125 + 50 * i[0],
+                                   125 + 50 * i[1])
 
-    def create_board(self, level: int) -> None:
+    def _create_board(self, level: int) -> None:
         # generate board
         self.required = len(LEVELS[level]['nodes']) // 2
         for i in LEVELS[level]['nodes']:
@@ -79,20 +82,27 @@ class Game:
                 if (i, j) in self.board:
                     continue
                 self.board[(i, j)] = tile(filled=False, strict=False)
-        self.update_board()
+        self._update_board()
 
     def run_game(self, level: int) -> None:
         self.mode = mode.PLAYING
-        self.create_board(level)
+        self.level_name = LEVELS[level]['name']
+        self._create_board(level)
         clear_canvas(self.canvas)
-        self.update_board()
+        self._update_board()
+
+    def tick_loop(self) -> None:
+        if self.mode == mode.MENU:
+            self.main_menu()
+        if self.mode == mode.PLAYING:
+            self._update_board()
 
     def handle_event(self, event: pygame.event.Event) -> None:
         if self.mode == mode.MENU:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
                 if self.start_rect.collidepoint(mouse_pos):
-                    self.run_game(1)
+                    self.run_game(0)
 
         if self.mode == mode.PLAYING:
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -108,8 +118,8 @@ class Game:
                 for i, j in self.board:
                     t1 = self.board[(i, j)]
                     if t1.hit_box.collidepoint(mouse_pos):
-                        is_color_nearby = any([b.color == select_color for b in get_nearby(self.board, i, j) if (b.strict and b == self.selected) or not b.strict])
-                        print(is_color_nearby)
+                        is_color_nearby = any([b.color == select_color for b in get_nearby(self.board, i, j) if (
+                                    b.strict and b == self.selected) or not b.strict])  ## check if the color is nearby and able to connect
                         if t1.strict and is_color_nearby and t1 != self.selected and t1.color == select_color:
                             self.selected.clicked = True
                             self.selected = None
@@ -122,4 +132,4 @@ class Game:
                         if is_color_nearby:
                             t1.color = select_color
                             t1.filled = True
-            self.update_board()
+                            ## TODO: check if any pipes are broken

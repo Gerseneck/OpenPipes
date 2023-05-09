@@ -41,6 +41,7 @@ class Main:
         while True:
             self.number_tick += 1
             clock.tick(self.TPS)
+            game.tick_loop()
             pygame.display.update()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:

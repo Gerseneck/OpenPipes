@@ -10,7 +10,6 @@ NEARBY_TILES = [(0, 1), (0, -1), (1, 0), (-1, 0)]
 class node:
     coord: tuple[int, int]
     color: int
-
     connected: bool = False
 
 
@@ -18,12 +17,10 @@ class node:
 class tile:
 
     color: int = 0x202020
-
     filled: bool = True
     strict: bool = True
 
     clicked: bool = field(init=False, default=False)
-
     hit_box: pygame.Rect = field(init=False)
 
 
@@ -54,3 +51,7 @@ def draw_right_align_text(canvas: pygame.Surface, text: pygame.Surface, x: float
 def get_nearby(board: dict[tuple[int, int], tile], x: int, y: int) -> list[tile]:
     return [board[(x + i, y + j)] for i, j in NEARBY_TILES if (x + i, y + j) in board]
 
+
+def check_pipe_color(board: dict[tuple[int, int], tile], c: int, s: node) -> bool:
+    ## loop through the board and check if that colored pipe is connected
+    ...
