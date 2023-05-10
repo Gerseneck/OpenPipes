@@ -67,5 +67,14 @@ def find_color(board: dict[tuple[int, int], tile], c: int) -> list[tile]:
     return [board[i] for i in board if board[i].color == c]
 
 
+def clear_color(board: dict[tuple[int, int], tile], c: int) -> None:
+    for tile_c in find_color(board, c):
+        if tile_c.strict:
+            tile_c.connected = False
+            continue
+        tile_c.color = color.gray
+        tile_c.filled = False
+
+
 def check_number_connected(board: dict[tuple[int, int], tile]) -> int:
     return len([board[i] for i in board if board[i].connected]) // 2

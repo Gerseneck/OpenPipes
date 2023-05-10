@@ -155,6 +155,7 @@ class Game:
             clear_canvas(self.canvas)
             self.main_menu()
         if self.mode == mode.PLAYING or self.mode == mode.WIN:
+            self.connected = check_number_connected(self.board)
             clear_canvas(self.canvas)
             self._update_board()
 
@@ -183,13 +184,15 @@ class Game:
                 for i, j in self.board:
                     t1 = self.board[(i, j)]
                     if t1.hit_box.collidepoint(mouse_pos) and t1.strict and t1.color != color.gray:
+                        if t1.connected:
+                            clear_color(self.board, t1.color)
+                            continue
                         self.selected = self.board[(i, j)]
 
             if self.selected and event.type == pygame.MOUSEMOTION:
                 mouse_pos = pygame.mouse.get_pos()
                 select_color = self.selected.color
                 for i, j in self.board:
-                    self.connected = check_number_connected(self.board)
                     t1 = self.board[(i, j)]
                     if t1.hit_box.collidepoint(mouse_pos):
                         is_color_nearby = any([b.color == select_color for b in get_nearby(self.board, i, j) if (
@@ -207,12 +210,7 @@ class Game:
                             continue
                         if is_color_nearby:
                             if t1.filled and t1.color != select_color:
-                                for tile_c in find_color(self.board, t1.color):
-                                    if tile_c.strict:
-                                        tile_c.connected = False
-                                        continue
-                                    tile_c.color = color.gray
-                                    tile_c.filled = False
+                                clear_color(self.board, t1.color)
                             t1.color = select_color
                             t1.filled = True
 
