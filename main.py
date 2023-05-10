@@ -13,7 +13,7 @@ from game import Game
 
 @dataclass
 class Main:
-    TPS: ClassVar[int] = 60
+    TPS: ClassVar[int] = 120
     x_size: int = 800
     y_size: int = 600
 
@@ -32,7 +32,7 @@ class Main:
         # logo = pygame.image.load('assets/logo.png')
         # pygame.display.set_icon(logo)
         pygame.display.set_caption(f'OpenPipe {__version__}')
-        canvas = pygame.display.set_mode((self.x_size, self.y_size))
+        canvas = pygame.display.set_mode((self.x_size, self.y_size), pygame.RESIZABLE)
         clock = pygame.time.Clock()
 
         game = Game(self, canvas)
