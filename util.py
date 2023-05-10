@@ -34,6 +34,10 @@ class color:
     blue = 0x0000FF
     yellow = 0xFFC300
     orange = 0xFF5733
+    purple = 0x7D3C98
+    pink = 0xFFC0CB
+
+    # empty space color
     gray = 0x202020
 
 
