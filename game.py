@@ -17,7 +17,7 @@ TITLE_W = 270
 TITLE_H = 35
 RESULT_W = 85
 RESULT_H = 20
-BOX_SIZE = 50
+BOX_SIZE = 70
 
 
 class mode(enum.Enum):
@@ -103,7 +103,7 @@ class Game:
         draw_right_align_text(self.canvas, self.font_24.render(time_text, True, 0x5555ffff), self.main.x_size - 5, 5)
 
         x_start = self.main.x_center - (self.level_size * BOX_SIZE) // 2
-        y_start = self.main.y_center - (self.level_size * BOX_SIZE) // 2 - 50
+        y_start = self.main.y_center - (self.level_size * BOX_SIZE) // 2 - 15
 
         draw.rect(self.canvas, 0xffffff, pygame.Rect(x_start - 5, y_start - 5, self.level_size * BOX_SIZE + 10, self.level_size * BOX_SIZE + 10), 5)
 
@@ -111,8 +111,8 @@ class Game:
             self.board[i].hit_box = draw.rect(self.canvas, self.board[i].color,
                                               pygame.Rect(x_start + BOX_SIZE * i[0], y_start + BOX_SIZE * i[1], BOX_SIZE, BOX_SIZE), False)
             if self.board[i].strict:
-                draw_centered_text(self.canvas, self.font_30.render('X', True, 0x000000), x_start + 25 + BOX_SIZE * i[0],
-                                   y_start + 25 + BOX_SIZE * i[1])
+                draw_centered_text(self.canvas, self.font_30.render('\u2713' if self.board[i].clicked else 'X', True, 0x000000),
+                                   x_start + 35 + BOX_SIZE * i[0], y_start + 35 + BOX_SIZE * i[1])
 
     def _create_board(self, level: int) -> None:
         # generate board
@@ -180,6 +180,7 @@ class Game:
                 mouse_pos = pygame.mouse.get_pos()
                 select_color = self.selected.color
                 for i, j in self.board:
+                    self.connected = check_number_connected(self.board)
                     t1 = self.board[(i, j)]
                     if t1.hit_box.collidepoint(mouse_pos):
                         is_color_nearby = any([b.color == select_color for b in get_nearby(self.board, i, j) if (
@@ -197,16 +198,11 @@ class Game:
                             continue
                         if is_color_nearby:
                             if t1.filled and t1.color != select_color:
-                                canceled = False
-                                for z in self.board:
-                                    if self.board[z].color == t1.color and self.board[z].strict and self.board[z] != self.selected:
-                                        self.board[z].clicked = False
-                                        self.connected -= 1 if not canceled else 0
-                                        canceled = True
+                                for tile_c in find_color(self.board, t1.color):
+                                    if tile_c.strict:
+                                        tile_c.clicked = False
                                         continue
-                                    if self.board[z].color == t1.color:
-                                        self.board[z].color = color.gray
-                                        self.board[z].filled = False
+                                    tile_c.color = color.gray
                             t1.color = select_color
                             t1.filled = True
 

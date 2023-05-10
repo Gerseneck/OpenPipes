@@ -57,3 +57,11 @@ def get_nearby(board: dict[tuple[int, int], tile], x: int, y: int) -> list[tile]
 
 def check_filled(board: dict[tuple[int, int], tile]) -> bool:
     return all([board[i].filled for i in board])
+
+
+def find_color(board: dict[tuple[int, int], tile], c: int) -> list[tile]:
+    return [board[i] for i in board if board[i].color == c]
+
+
+def check_number_connected(board: dict[tuple[int, int], tile]) -> int:
+    return len([board[i] for i in board if board[i].clicked]) // 2
