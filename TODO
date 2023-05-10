@@ -1,12 +1,7 @@
 TODO:
 - add base game functionality
-    - check whether or not previous pipe has been broken
     - remove pipes not in the same direction
-- make the board in the center of the map
-- add headers
 - add level picker
-- add timer
-- add amount of moves
 - add score storage
 
 ## a flow inspired open source game.
