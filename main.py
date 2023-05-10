@@ -13,7 +13,7 @@ from game import Game
 
 @dataclass
 class Main:
-    TPS: ClassVar[int] = 120
+    TPS: ClassVar[int] = 60
     x_size: int = 800
     y_size: int = 600
 

@@ -38,6 +38,7 @@ class Game:
     level: int = field(init=False, default=0)
     level_name: str = field(init=False)
     level_size: int = field(init=False)
+    level_nodes: list[node] = field(init=False)
     selected: tile = field(init=False, default=None)
     connected: int = field(init=False, default=0)
     required: int = field(init=False)
@@ -61,11 +62,19 @@ class Game:
         return pygame.Rect(self.main.x_center - TITLE_W, 250 - TITLE_H, 2 * TITLE_W, 2 * TITLE_H)
 
     @property
+    def level_editor(self) -> pygame.Rect:
+        return pygame.Rect(self.main.x_center - TITLE_W, 250 - TITLE_H, 2 * TITLE_W, 2 * TITLE_H)
+
+    @property
     def next_rect(self) -> pygame.Rect:
-        return pygame.Rect(self.main.x_center-RESULT_W, self.main.y_size-50-RESULT_H, 2*RESULT_W, 2*RESULT_H)
+        return pygame.Rect(self.main.x_center - 90 - RESULT_W, self.main.y_size - 50 - RESULT_H, 2 * RESULT_W, 2 * RESULT_H)
+
+    @property
+    def menu_rect(self) -> pygame.Rect:
+        return pygame.Rect(self.main.x_center + 90 - RESULT_W, self.main.y_size - 50 - RESULT_H, 2 * RESULT_W, 2 * RESULT_H)
 
     def main_menu(self) -> None:
-
+        self.mode = mode.MENU
         clear_canvas(self.canvas)
         draw_centered_text(self.canvas, self.font_60.render('OpenPipe', True, 0xff55ffff),
                            self.main.x_center, 90)
@@ -79,8 +88,11 @@ class Game:
                                self.main.x_center, 50)
             if self.level + 1 in LEVELS:
                 draw.rect(self.canvas, 0x00aa00, self.next_rect)
-                draw_centered_text(self.canvas, self.font_24.render('Next Level', True, 0xffffffff), self.main.x_center,
+                draw_centered_text(self.canvas, self.font_24.render('Next Level', True, 0xffffffff), self.main.x_center-90,
                                    self.main.y_size-50)
+            draw.rect(self.canvas, 0x00aa00, self.menu_rect)
+            draw_centered_text(self.canvas, self.font_24.render('Main Menu', True, 0xffffffff), self.main.x_center+90,
+                               self.main.y_size-50)
 
         self.canvas.blit(self.font_30.render(self.level_name, True, 0x11ff11ff), (5, 5))
         self.canvas.blit(self.font_24.render(f'{self.connected}/{self.required} Completed', True, 0x11ff11ff), (7, 45))
@@ -93,6 +105,8 @@ class Game:
         x_start = self.main.x_center - (self.level_size * BOX_SIZE) // 2
         y_start = self.main.y_center - (self.level_size * BOX_SIZE) // 2 - 50
 
+        draw.rect(self.canvas, 0xffffff, pygame.Rect(x_start - 5, y_start - 5, self.level_size * BOX_SIZE + 10, self.level_size * BOX_SIZE + 10), 5)
+
         for i in self.board:
             self.board[i].hit_box = draw.rect(self.canvas, self.board[i].color,
                                               pygame.Rect(x_start + BOX_SIZE * i[0], y_start + BOX_SIZE * i[1], BOX_SIZE, BOX_SIZE), False)
@@ -102,14 +116,13 @@ class Game:
 
     def _create_board(self, level: int) -> None:
         # generate board
-        self.required = len(LEVELS[level]['nodes']) // 2
-        for i in LEVELS[level]['nodes']:
-            self.board[i.coord] = tile(i.color)
-        for i in range(LEVELS[level]['size']):
-            for j in range(LEVELS[level]['size']):
+        for i in self.level_nodes:
+            self.board[i.coord] = tile(*i.coord, color=i.color)
+        for i in range(self.level_size):
+            for j in range(self.level_size):
                 if (i, j) in self.board:
                     continue
-                self.board[(i, j)] = tile(filled=False, strict=False)
+                self.board[(i, j)] = tile(i, j, filled=False, strict=False)
         self._update_board()
 
     def _clear_board(self):
@@ -119,11 +132,15 @@ class Game:
 
     def run_game(self, level: int) -> None:
         self._clear_board()
+
         self.mode = mode.PLAYING
         self.level = level
         self.level_name = LEVELS[level]['name']
         self.level_size = LEVELS[level]['size']
+        self.level_nodes = LEVELS[level]['nodes']
+        self.required = len(LEVELS[level]['nodes']) // 2
         self.time_start = self.main.number_tick
+
         self._create_board(level)
         clear_canvas(self.canvas)
         self._update_board()
@@ -148,6 +165,8 @@ class Game:
                 mouse_pos = pygame.mouse.get_pos()
                 if self.next_rect.collidepoint(mouse_pos) and self.level + 1 in LEVELS:
                     self.run_game(self.level + 1)
+                if self.menu_rect.collidepoint(mouse_pos):
+                    self.main_menu()
 
         if self.mode == mode.PLAYING:
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -170,12 +189,25 @@ class Game:
                             self.selected = None
                             self.connected += 1
                             t1.clicked = True
-                            if self.connected == self.required:
+                            if self.connected == self.required and check_filled(self.board):
                                 self.mode = mode.WIN
                                 self.time_end = self.main.number_tick
+                            continue
                         if t1.strict:
                             continue
                         if is_color_nearby:
+                            if t1.filled and t1.color != select_color:
+                                canceled = False
+                                for z in self.board:
+                                    if self.board[z].color == t1.color and self.board[z].strict and self.board[z] != self.selected:
+                                        self.board[z].clicked = False
+                                        self.connected -= 1 if not canceled else 0
+                                        canceled = True
+                                        continue
+                                    if self.board[z].color == t1.color:
+                                        self.board[z].color = color.gray
+                                        self.board[z].filled = False
                             t1.color = select_color
                             t1.filled = True
-                            ## TODO: check if any pipes are broken
+
+

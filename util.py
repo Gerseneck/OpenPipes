@@ -16,6 +16,9 @@ class node:
 @dataclass
 class tile:
 
+    x: int
+    y: int
+
     color: int = 0x202020
     filled: bool = True
     strict: bool = True
@@ -52,6 +55,5 @@ def get_nearby(board: dict[tuple[int, int], tile], x: int, y: int) -> list[tile]
     return [board[(x + i, y + j)] for i, j in NEARBY_TILES if (x + i, y + j) in board]
 
 
-def check_pipe_color(board: dict[tuple[int, int], tile], c: int, s: node) -> bool:
-    ## loop through the board and check if that colored pipe is connected
-    ...
+def check_filled(board: dict[tuple[int, int], tile]) -> bool:
+    return all([board[i].filled for i in board])
