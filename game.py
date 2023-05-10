@@ -117,7 +117,7 @@ class Game:
                                               pygame.Rect(x_start + box_size * i[0], y_start + box_size * i[1], box_size, box_size), False)
             if self.board[i].strict:
                 draw_centered_text(self.canvas, self.font_30.render('\u2713' if self.board[i].connected else 'X', True, 0x000000),
-                                   x_start + 35 * self.factor + box_size * i[0] , y_start + 35 * self.factor + box_size * i[1])
+                                   x_start + box_size // 2 + box_size * i[0], y_start + box_size // 2 + box_size * i[1])
 
     def _create_board(self) -> None:
         # generate board
