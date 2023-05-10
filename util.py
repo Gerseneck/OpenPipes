@@ -23,7 +23,7 @@ class tile:
     filled: bool = True
     strict: bool = True
 
-    clicked: bool = field(init=False, default=False)
+    connected: bool = field(init=False, default=False)
     hit_box: pygame.Rect = field(init=False)
 
 
@@ -64,4 +64,4 @@ def find_color(board: dict[tuple[int, int], tile], c: int) -> list[tile]:
 
 
 def check_number_connected(board: dict[tuple[int, int], tile]) -> int:
-    return len([board[i] for i in board if board[i].clicked]) // 2
+    return len([board[i] for i in board if board[i].connected]) // 2

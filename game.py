@@ -17,7 +17,6 @@ TITLE_W = 270
 TITLE_H = 35
 RESULT_W = 85
 RESULT_H = 20
-BOX_SIZE = 70
 
 
 class mode(enum.Enum):
@@ -58,6 +57,10 @@ class Game:
         self.font_60 = pygame.font.Font('assets/jetbrainsmononerd.ttf', 60)
 
     @property
+    def factor(self) -> int:
+        return self.main.x_size // 800
+
+    @property
     def start_rect(self) -> pygame.Rect:
         return pygame.Rect(self.main.x_center - TITLE_W, 250 - TITLE_H, 2 * TITLE_W, 2 * TITLE_H)
 
@@ -95,26 +98,28 @@ class Game:
                                self.main.y_size-50)
 
         self.canvas.blit(self.font_30.render(self.level_name, True, 0x11ff11ff), (5, 5))
-        self.canvas.blit(self.font_24.render(f'{self.connected}/{self.required} Completed', True, 0x11ff11ff), (7, 45))
+        self.canvas.blit(self.font_24.render(f'{self.connected}/{self.required} Connected', True, 0x11ff11ff), (7, 45))
 
         ticks_passed = self.main.number_tick - self.time_start if self.mode == mode.PLAYING else self.time_end - self.time_start
         seconds = ticks_passed // self.main.TPS
         time_text = f'\uf64f {seconds // 60:02d}:{seconds % 60:02d}'
         draw_right_align_text(self.canvas, self.font_24.render(time_text, True, 0x5555ffff), self.main.x_size - 5, 5)
 
-        x_start = self.main.x_center - (self.level_size * BOX_SIZE) // 2
-        y_start = self.main.y_center - (self.level_size * BOX_SIZE) // 2 - 15
+        box_size = 350 * self.factor // self.level_size
 
-        draw.rect(self.canvas, 0xffffff, pygame.Rect(x_start - 5, y_start - 5, self.level_size * BOX_SIZE + 10, self.level_size * BOX_SIZE + 10), 5)
+        x_start = self.main.x_center - (self.level_size * box_size) // 2
+        y_start = self.main.y_center - (self.level_size * box_size) // 2 + 15
+
+        draw.rect(self.canvas, 0xffffff, pygame.Rect(x_start - 5, y_start - 5, self.level_size * box_size + 10, self.level_size * box_size + 10), 5)
 
         for i in self.board:
             self.board[i].hit_box = draw.rect(self.canvas, self.board[i].color,
-                                              pygame.Rect(x_start + BOX_SIZE * i[0], y_start + BOX_SIZE * i[1], BOX_SIZE, BOX_SIZE), False)
+                                              pygame.Rect(x_start + box_size * i[0], y_start + box_size * i[1], box_size, box_size), False)
             if self.board[i].strict:
-                draw_centered_text(self.canvas, self.font_30.render('\u2713' if self.board[i].clicked else 'X', True, 0x000000),
-                                   x_start + 35 + BOX_SIZE * i[0], y_start + 35 + BOX_SIZE * i[1])
+                draw_centered_text(self.canvas, self.font_30.render('\u2713' if self.board[i].connected else 'X', True, 0x000000),
+                                   x_start + 35 * self.factor + box_size * i[0] , y_start + 35 * self.factor + box_size * i[1])
 
-    def _create_board(self, level: int) -> None:
+    def _create_board(self) -> None:
         # generate board
         for i in self.level_nodes:
             self.board[i.coord] = tile(*i.coord, color=i.color)
@@ -141,7 +146,7 @@ class Game:
         self.required = len(LEVELS[level]['nodes']) // 2
         self.time_start = self.main.number_tick
 
-        self._create_board(level)
+        self._create_board()
         clear_canvas(self.canvas)
         self._update_board()
 
@@ -152,6 +157,10 @@ class Game:
         if self.mode == mode.PLAYING or self.mode == mode.WIN:
             clear_canvas(self.canvas)
             self._update_board()
+
+            if pygame.key.get_pressed()[pygame.K_r]:
+                clear_canvas(self.canvas)
+                self.run_game(self.level)
 
     def handle_event(self, event: pygame.event.Event) -> None:
         if self.mode == mode.MENU:
@@ -173,7 +182,7 @@ class Game:
                 mouse_pos = pygame.mouse.get_pos()
                 for i, j in self.board:
                     t1 = self.board[(i, j)]
-                    if t1.hit_box.collidepoint(mouse_pos) and t1.strict and t1.color != color.gray and not t1.clicked:
+                    if t1.hit_box.collidepoint(mouse_pos) and t1.strict and t1.color != color.gray:
                         self.selected = self.board[(i, j)]
 
             if self.selected and event.type == pygame.MOUSEMOTION:
@@ -186,10 +195,10 @@ class Game:
                         is_color_nearby = any([b.color == select_color for b in get_nearby(self.board, i, j) if (
                                 b.strict and b == self.selected) or not b.strict])  ## check if the color is nearby and able to connect
                         if t1.strict and is_color_nearby and t1 != self.selected and t1.color == select_color:
-                            self.selected.clicked = True
+                            self.selected.connected = True
                             self.selected = None
                             self.connected += 1
-                            t1.clicked = True
+                            t1.connected = True
                             if self.connected == self.required and check_filled(self.board):
                                 self.mode = mode.WIN
                                 self.time_end = self.main.number_tick
@@ -200,9 +209,10 @@ class Game:
                             if t1.filled and t1.color != select_color:
                                 for tile_c in find_color(self.board, t1.color):
                                     if tile_c.strict:
-                                        tile_c.clicked = False
+                                        tile_c.connected = False
                                         continue
                                     tile_c.color = color.gray
+                                    tile_c.filled = False
                             t1.color = select_color
                             t1.filled = True
 
