@@ -7,7 +7,7 @@ import pygame
 from pygame import draw
 
 from data.level import LEVELS
-from util import tile, clear_canvas, draw_centered_text
+from util import tile, clear_canvas, draw_centered_text, clear_color, get_nearby, check_filled, color
 
 if TYPE_CHECKING:
     from main import Main
@@ -95,3 +95,44 @@ class Core:
 
     def draw(self):
         self._update_board()
+        
+    def handle_event(self, event: pygame.event) -> bool:
+        """Handle events for the game, returns True if the game is over"""
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_pos = pygame.mouse.get_pos()
+
+            for i, j in self.board:
+                t1 = self.board[(i, j)]
+                if t1.hit_box.collidepoint(mouse_pos) and t1.strict and t1.color != color.gray:
+                    if t1.connected:
+                        clear_color(self.board, t1.color)
+                        self.selected = None
+                        continue
+                    self.selected = self.board[(i, j)]
+
+        if self.selected and event.type == pygame.MOUSEMOTION:
+            mouse_pos = pygame.mouse.get_pos()
+            select_color = self.selected.color
+            for i, j in self.board:
+                t1 = self.board[(i, j)]
+                if t1.hit_box.collidepoint(mouse_pos):
+                    is_color_nearby = any([b.color == select_color for b in get_nearby(self.board, i, j) if (
+                            b.strict and b == self.selected) or not b.strict])  ## check if the color is nearby and able to connect
+                    if t1.strict and is_color_nearby and t1 != self.selected and t1.color == select_color:
+                        self.selected.connected = True
+                        self.selected = None
+                        self.connected += 1
+                        t1.connected = True
+                        if self.connected == self.required and check_filled(self.board):
+                            self.time_end = self.main.number_tick
+                            return True
+                        continue
+                    if t1.strict:
+                        continue
+                    if is_color_nearby:
+                        if t1.filled and t1.color != select_color:
+                            clear_color(self.board, t1.color)
+                        t1.color = select_color
+                        t1.filled = True
+        return False
+                        

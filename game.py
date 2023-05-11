@@ -91,6 +91,7 @@ class Game:
         if self.mode == mode.MENU:
             self.main_menu()
             self.core = None
+            self.editor = None
             return
 
         if self.mode == mode.EDITOR:
@@ -174,36 +175,7 @@ class Game:
                 if self.menu_rect.collidepoint(mouse_pos):
                     self.main_menu()
 
-                for i, j in self.core.board:
-                    t1 = self.core.board[(i, j)]
-                    if t1.hit_box.collidepoint(mouse_pos) and t1.strict and t1.color != color.gray:
-                        if t1.connected:
-                            clear_color(self.core.board, t1.color)
-                            self.core.selected = None
-                            continue
-                        self.core.selected = self.core.board[(i, j)]
+            if self.core.handle_event(event):
+                self.mode = mode.WIN
+                self.core.time_end = self.main.number_tick
 
-            if self.core.selected and event.type == pygame.MOUSEMOTION:
-                mouse_pos = pygame.mouse.get_pos()
-                select_color = self.core.selected.color
-                for i, j in self.core.board:
-                    t1 = self.core.board[(i, j)]
-                    if t1.hit_box.collidepoint(mouse_pos):
-                        is_color_nearby = any([b.color == select_color for b in get_nearby(self.core.board, i, j) if (
-                                b.strict and b == self.core.selected) or not b.strict])  ## check if the color is nearby and able to connect
-                        if t1.strict and is_color_nearby and t1 != self.core.selected and t1.color == select_color:
-                            self.core.selected.connected = True
-                            self.core.selected = None
-                            self.core.connected += 1
-                            t1.connected = True
-                            if self.core.connected == self.core.required and check_filled(self.core.board):
-                                self.mode = mode.WIN
-                                self.core.time_end = self.main.number_tick
-                            continue
-                        if t1.strict:
-                            continue
-                        if is_color_nearby:
-                            if t1.filled and t1.color != select_color:
-                                clear_color(self.core.board, t1.color)
-                            t1.color = select_color
-                            t1.filled = True
