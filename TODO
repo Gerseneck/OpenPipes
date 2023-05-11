@@ -3,5 +3,8 @@ TODO:
     - remove pipes not in the same direction
 - add level picker
 - add score storage
+- add level editor
+    - add load and save functionality
+- make random level generator
 
 ## a flow inspired open source game.
