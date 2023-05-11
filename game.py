@@ -159,6 +159,10 @@ class Game:
                 mouse_pos = pygame.mouse.get_pos()
                 if self.menu_rect.collidepoint(mouse_pos):
                     self.main_menu()
+                if self.next_rect.collidepoint(mouse_pos):
+                    encode_data(self.editor.board, self.editor.board_name, self.editor.board_size)
+                    print(unload_data(encode_data(self.editor.board, self.editor.board_name, self.editor.board_size)))
+            self.editor.handle_event(event)
 
         if self.mode == mode.WIN:
             if event.type == pygame.MOUSEBUTTONDOWN:

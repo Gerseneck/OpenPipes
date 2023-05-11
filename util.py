@@ -32,6 +32,8 @@ class color:
     orange = 0xFF5733
     purple = 0x7D3C98
     pink = 0xFFC0CB
+    brown = 0x8B4513
+    cyan = 0x00FFFF
 
     # empty space color
     gray = 0x202020
@@ -74,3 +76,16 @@ def clear_color(board: dict[tuple[int, int], tile], c: int) -> None:
 
 def check_number_connected(board: dict[tuple[int, int], tile]) -> int:
     return len([board[i] for i in board if board[i].connected]) // 2
+
+
+def encode_data(board: dict[tuple[int, int], tile], name: str, size: int) -> str:
+    data = {
+        'name': name,
+        'size': size,
+        'nodes': [((board[i].x, board[i].y), board[i].color) for i in board if board[i].strict and board[i].filled]
+    }
+    return base64.b64encode(str(data).encode()).decode()
+
+
+def unload_data(data: str) -> dict:
+    return ast.literal_eval(base64.b64decode(data).decode())
