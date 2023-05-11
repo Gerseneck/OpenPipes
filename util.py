@@ -1,16 +1,12 @@
+import ast
+import base64
+import math
 from dataclasses import dataclass, field
 
 import pygame
 
 
 NEARBY_TILES = [(0, 1), (0, -1), (1, 0), (-1, 0)]
-
-
-@dataclass
-class node:
-    coord: tuple[int, int]
-    color: int
-    connected: bool = False
 
 
 @dataclass
