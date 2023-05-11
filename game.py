@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import binascii
 import enum
 from typing import TYPE_CHECKING
 
 import pygame.mouse
 from pygame import draw
+
+from loader import Loader
 
 if TYPE_CHECKING:
     from main import Main
@@ -35,6 +38,7 @@ class Game:
 
     core: Core = field(init=False, default=None)
     editor: Editor = field(init=False, default=None)
+    loader: Loader = field(init=False, default=None)
 
     mode: mode = field(init=False, default=mode.MENU)
 
@@ -92,6 +96,7 @@ class Game:
             self.main_menu()
             self.core = None
             self.editor = None
+            self.loader = None
             return
 
         if self.mode == mode.EDITOR:
@@ -99,6 +104,15 @@ class Game:
             draw.rect(self.canvas, 0x00aa00, self.next_rect)
             draw_centered_text(self.canvas, self.font_24.render('Save', True, 0xffffffff),
                                self.main.x_center - 90, self.main.y_size - 50)
+
+        if self.mode == mode.LOAD:
+            self.loader.draw()
+            draw.rect(self.canvas, 0x00aa00, self.next_rect)
+            draw_centered_text(self.canvas, self.font_24.render('Load', True, 0xffffffff),
+                               self.main.x_center - 90, self.main.y_size - 50)
+            if self.loader.invalid_data:
+                draw_centered_text(self.canvas, self.font_24.render('Invalid Data', True, 0xff0000ff),
+                                   self.main.x_center, self.main.y_center)
 
         if self.mode != mode.EDITOR and self.core is not None:
             self.canvas.blit(self.font_24.render(f'{self.core.connected}/{self.core.required} Connected', True, 0x11ff11ff),
@@ -110,13 +124,20 @@ class Game:
 
         if self.mode == mode.WIN:
             draw_centered_text(self.canvas, self.font_42.render('PERFECT!', True, 0xff55ffff),
-                               self.main.x_center, 50)
-            if self.core.level + 1 in LEVELS:
+                               self.main.x_center, 60)
+            if self.core.level + 1 in LEVELS and not self.core.loaded:
                 draw.rect(self.canvas, 0x00aa00, self.next_rect)
                 draw_centered_text(self.canvas, self.font_24.render('Next Level', True, 0xffffffff),
                                    self.main.x_center - 90, self.main.y_size - 50)
 
-        self.canvas.blit(self.font_30.render('Level editor' if self.core is None else self.core.level_name, True, 0x11ff11ff), (5, 5))
+        text = ''
+        if self.mode == mode.PLAYING or self.mode == mode.WIN:
+            text = self.core.level_name
+        if self.mode == mode.EDITOR:
+            text = 'Level Editor'
+        if self.mode == mode.LOAD:
+            text = 'Load Level'
+        self.canvas.blit(self.font_30.render(text, True, 0x11ff11ff), (5, 5))
         draw.rect(self.canvas, 0x00aa00, self.menu_rect)
         draw_centered_text(self.canvas, self.font_24.render('Main Menu', True, 0xffffffff), self.main.x_center + 90,
                            self.main.y_size - 50)
@@ -129,10 +150,20 @@ class Game:
         self.core.run_game(level)
         self.mode = mode.PLAYING
 
+    def run_game_special(self, data: dict) -> None:
+        self.core = Core(self.main, self.canvas)
+        self.core.run_game_special(data)
+        self.mode = mode.PLAYING
+
     def run_level_editor(self) -> None:
         self.editor = Editor(self.main, self.canvas)
         self.editor.run()
         self.mode = mode.EDITOR
+
+    def run_loader(self) -> None:
+        self.loader = Loader(self.main, self.canvas)
+        self.loader.run()
+        self.mode = mode.LOAD
 
     def tick_loop(self) -> None:
         if self.mode == mode.PLAYING or self.mode == mode.WIN:
@@ -153,6 +184,8 @@ class Game:
                     self.run_game(0)
                 if self.level_editor.collidepoint(mouse_pos):
                     self.run_level_editor()
+                if self.load_rect.collidepoint(mouse_pos):
+                    self.run_loader()
 
         if self.mode == mode.EDITOR:
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -160,9 +193,26 @@ class Game:
                 if self.menu_rect.collidepoint(mouse_pos):
                     self.main_menu()
                 if self.next_rect.collidepoint(mouse_pos):
-                    encode_data(self.editor.board, self.editor.board_name, self.editor.board_size)
-                    print(unload_data(encode_data(self.editor.board, self.editor.board_name, self.editor.board_size)))
+                    if pygame.scrap.lost():
+                        print(encode_data(self.editor.board, self.editor.board_name, self.editor.board_size).decode())
+                        return
+                    pygame.scrap.put('Plain text', encode_data(self.editor.board, self.editor.board_name, self.editor.board_size))
             self.editor.handle_event(event)
+
+        if self.mode == mode.LOAD:
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+                if self.menu_rect.collidepoint(mouse_pos):
+                    self.main_menu()
+                if self.next_rect.collidepoint(mouse_pos):
+                    if not self.loader.text:
+                        return
+                    try:
+                        self.run_game_special(unload_data(self.loader.text.strip()))
+                    except (UnicodeDecodeError, binascii.Error):
+                        self.loader.invalid_data = True
+                        self.loader.text = ''
+            self.loader.handle_event(event)
 
         if self.mode == mode.WIN:
             if event.type == pygame.MOUSEBUTTONDOWN:

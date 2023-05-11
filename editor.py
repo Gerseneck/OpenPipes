@@ -20,7 +20,7 @@ class Editor:
 
     board: dict[tuple[int, int], tile] = field(init=False, default_factory=dict)
     board_size: int = field(init=False, default=5)
-    board_name: str = field(init=False, default='Untitled')
+    board_name: str = field(init=False, default='Untitled Board')
     name_box_selected: bool = field(init=False, default=False)
 
     color_buttons: dict[int, pygame.rect] = field(init=False, default_factory=dict)
@@ -55,41 +55,37 @@ class Editor:
         draw.rect(self.canvas, 0xffffff, pygame.Rect(x_start - 5, y_start - 5, self.board_size * box_size + 10,
                                                      self.board_size * box_size + 10), 5)
 
+        # level name text box
+        text = self.board_name[-28 * self.factor:]
         draw.rect(self.canvas, 0xffffff, self.textbox_rect, 3)
-        self.canvas.blit(self.font_24.render(
-            self.board_name + '_' if time.time() % 1 > 0.5 and self.name_box_selected else self.board_name, True,
-            0xffffffff), (self.main.x_center - 210 * self.factor + 10, 65))
+        self.canvas.blit(self.font_24.render(text + '_' if time.time() % 1 > 0.5 and self.name_box_selected else text, True, 0xffffffff),
+                         (self.main.x_center - 210 * self.factor + 10, 65))
 
+        # draws color selector
         for i, j in enumerate([i for i in dir(color) if not i.startswith('__')]):
+            selected = self.selected_color == getattr(color, j)
             self.color_buttons[getattr(color, j)] = draw.rect(self.canvas, getattr(color, j),
-                                                              pygame.Rect(self.main.x_size - 110,
-                                                                          5 + 60 * i, 50, 50),
-                                                              self.selected_color == getattr(color, j))
+                                                              pygame.Rect(self.main.x_size - 110, 5 + 60 * i, 50, 50), width=(5 if selected else 0))
             if getattr(color, j) == color.gray:
-                draw_centered_text(self.canvas,
-                                   self.font_24.render('\uf12d', True, 0xffffffff),
-                                   self.main.x_size - 85, 5 + 60 * i + 25)
+                draw_centered_text(self.canvas, self.font_24.render('\uf12d', True, 0xffffffff), self.main.x_size - 85, 5 + 60 * i + 25)
 
+        # draws board size selector
         for i, j in enumerate(range(5, 10)):
             if i % 2 == 0:
-                self.size_buttons[j] = draw.rect(self.canvas, color.blue, pygame.Rect(60, 100 + 50 * i, 50, 50),
-                                                 self.board_size == j)
+                self.size_buttons[j] = draw.rect(self.canvas, color.blue, pygame.Rect(60, 100 + 50 * i, 50, 50), self.board_size == j)
                 draw_centered_text(self.canvas, self.font_24.render(str(j), True, 0xffffff),
                                    85, 100 + 50 * i + 25)
 
+        # draws board
         for i in self.board:
             self.board[i].hit_box = draw.rect(self.canvas, self.board[i].color,
                                               pygame.Rect(x_start + box_size * i[0], y_start + box_size * i[1],
-                                                          box_size, box_size))
-            draw.rect(self.canvas, 0xffffff,
-                      pygame.Rect(x_start + box_size * i[0], y_start + box_size * i[1],
-                                  box_size, box_size), True)
+                                                          box_size, box_size), False)
+            draw.rect(self.canvas, 0xffffff, pygame.Rect(x_start + box_size * i[0], y_start + box_size * i[1], box_size, box_size), True)
 
             if self.board[i].strict:
-                draw_centered_text(self.canvas,
-                                   self.font_30.render('X', True, 0x000000),
-                                   x_start + box_size // 2 + box_size * i[0],
-                                   y_start + box_size // 2 + box_size * i[1])
+                draw_centered_text(self.canvas, self.font_30.render('X', True, 0x000000),
+                                   x_start + box_size // 2 + box_size * i[0], y_start + box_size // 2 + box_size * i[1])
 
     def _clear_board(self) -> None:
         self.board = dict()
@@ -113,7 +109,7 @@ class Editor:
 
             if self.textbox_rect.collidepoint(mouse_pos):
                 self.name_box_selected = True
-                if self.board_name == 'Untitled':
+                if self.board_name == 'Untitled Board':
                     self.board_name = ''
 
             for i in self.color_buttons:
@@ -126,11 +122,10 @@ class Editor:
                     self.run()
 
             for i in self.board:
-                if self.board[i].hit_box.collidepoint(mouse_pos) and len(
-                        find_color(self.board, self.selected_color)) != 2:
+                if self.board[i].hit_box.collidepoint(mouse_pos) and len(find_color(self.board, self.selected_color)) != 2:
                     self.board[i].color = self.selected_color
                     self.board[i].filled = True
-                    self.board[i].strict = False if self.selected_color == color.gray else True
+                    self.board[i].strict = self.selected_color != color.gray
 
         if event.type == pygame.KEYDOWN:
             if not self.name_box_selected:
@@ -141,7 +136,9 @@ class Editor:
 
             elif event.key == pygame.K_RETURN or event.key == pygame.K_KP_ENTER or event.key == pygame.K_ESCAPE:
                 if not self.board_name.strip():
-                    self.board_name = 'Untitled'
+                    self.board_name = 'Untitled Board'
+                if len(self.board_name) > 37:
+                    self.board_name = self.board_name.strip()[:37].strip()
                 self.name_box_selected = False
 
             elif event.key == pygame.K_TAB:

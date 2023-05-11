@@ -7,7 +7,7 @@ import pygame
 from pygame import draw
 
 from data.level import LEVELS
-from util import tile, clear_canvas, draw_centered_text, clear_color, get_nearby, check_filled, color
+from util import tile, clear_canvas, draw_centered_text, clear_color, get_nearby, check_filled, color, encode_data
 
 if TYPE_CHECKING:
     from main import Main
@@ -19,6 +19,7 @@ class Core:
     canvas: pygame.Surface
 
     board: dict[tuple[int, int], tile] = field(init=False, default_factory=dict)
+    loaded: bool = field(init=False, default=False)
 
     level: int = field(init=False, default=0)
     level_name: str = field(init=False)
@@ -88,6 +89,21 @@ class Core:
         self.level_nodes = LEVELS[level]['nodes']
         self.required = len(LEVELS[level]['nodes']) // 2
         self.time_start = self.main.number_tick
+
+        self._create_board()
+        clear_canvas(self.canvas)
+        self._update_board()
+
+    def run_game_special(self, data: dict) -> None:
+        self._clear_board()
+
+        self.level = -1
+        self.level_name = data['name']
+        self.level_size = data['size']
+        self.level_nodes = data['nodes']
+        self.required = len(data['nodes']) // 2
+        self.time_start = self.main.number_tick
+        self.loaded = True
 
         self._create_board()
         clear_canvas(self.canvas)

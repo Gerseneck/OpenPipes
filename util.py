@@ -78,13 +78,13 @@ def check_number_connected(board: dict[tuple[int, int], tile]) -> int:
     return len([board[i] for i in board if board[i].connected]) // 2
 
 
-def encode_data(board: dict[tuple[int, int], tile], name: str, size: int) -> str:
+def encode_data(board: dict[tuple[int, int], tile], name: str, size: int) -> bytes:
     data = {
         'name': name,
         'size': size,
         'nodes': [((board[i].x, board[i].y), board[i].color) for i in board if board[i].strict and board[i].filled]
     }
-    return base64.b64encode(str(data).encode()).decode()
+    return base64.b64encode(str(data).encode('utf-8'))
 
 
 def unload_data(data: str) -> dict:

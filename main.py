@@ -33,6 +33,8 @@ class Main:
         # pygame.display.set_icon(logo)
         pygame.display.set_caption(f'OpenPipe {__version__}')
         canvas = pygame.display.set_mode((self.x_size, self.y_size), pygame.RESIZABLE)
+        pygame.scrap.init()
+        pygame.scrap.set_mode(pygame.SCRAP_CLIPBOARD)
         clock = pygame.time.Clock()
 
         game = Game(self, canvas)
