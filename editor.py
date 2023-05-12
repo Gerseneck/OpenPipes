@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import string
 from dataclasses import dataclass, field
 import time
 from typing import TYPE_CHECKING
@@ -72,10 +71,8 @@ class Editor:
 
         # draws board size selector
         for i, j in enumerate(range(5, 10)):
-            if i % 2 == 0:
-                self.size_buttons[j] = draw.rect(self.canvas, color.blue, pygame.Rect(60, 100 + 50 * i, 50, 50), self.board_size == j)
-                draw_centered_text(self.canvas, self.font_24.render(str(j), True, 0xffffff),
-                                   85, 100 + 50 * i + 25)
+            self.size_buttons[j] = draw.rect(self.canvas, color.blue, pygame.Rect(60, 100 + 50 * i, 50, 50), self.board_size == j)
+            draw_centered_text(self.canvas, self.font_24.render(str(j), True, 0xffffff), 85, 100 + 50 * i + 25)
 
         # draws board
         for i in self.board:
