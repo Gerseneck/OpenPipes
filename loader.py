@@ -67,4 +67,5 @@ class Loader:
                 self.text += pygame.scrap.get('text/plain;charset=utf-8').decode('utf-8')
 
             else:
-                self.text += event.unicode
+                if event.unicode.isprintable():
+                    self.text += event.unicode

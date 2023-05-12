@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import string
 from dataclasses import dataclass, field
 import time
 from typing import TYPE_CHECKING
@@ -145,4 +146,5 @@ class Editor:
                 self.name_box_selected = not self.name_box_selected
 
             elif self.name_box_selected:
-                self.board_name += event.unicode
+                if event.unicode.isprintable():
+                    self.board_name += event.unicode
