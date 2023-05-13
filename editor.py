@@ -65,7 +65,7 @@ class Editor:
         for i, j in enumerate([i for i in dir(color) if not i.startswith('__')]):
             selected = self.selected_color == getattr(color, j)
             self.color_buttons[getattr(color, j)] = draw.rect(self.canvas, getattr(color, j),
-                                                              pygame.Rect(self.main.x_size - 110, 5 + 60 * i, 50, 50), width=(5 if selected else 0))
+                                                              pygame.Rect(self.main.x_size - 110, 5 + 60 * i, 50, 50), width=5 if selected else 0)
             if getattr(color, j) == color.gray:
                 draw_centered_text(self.canvas, self.font_24.render('\uf12d', True, 0xffffffff), self.main.x_size - 85, 5 + 60 * i + 25)
 
@@ -77,8 +77,7 @@ class Editor:
         # draws board
         for i in self.board:
             self.board[i].hit_box = draw.rect(self.canvas, self.board[i].color,
-                                              pygame.Rect(x_start + box_size * i[0], y_start + box_size * i[1],
-                                                          box_size, box_size), False)
+                                              pygame.Rect(x_start + box_size * i[0], y_start + box_size * i[1], box_size, box_size), False)
             draw.rect(self.canvas, 0xffffff, pygame.Rect(x_start + box_size * i[0], y_start + box_size * i[1], box_size, box_size), True)
 
             if self.board[i].strict:

@@ -75,7 +75,7 @@ class Core:
         self._update_board()
 
     def _clear_board(self):
-        self.board = dict()
+        self.board = {}
         self.selected = None
         self.connected = 0
 
