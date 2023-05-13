@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import binascii
 import enum
+import random
 from typing import TYPE_CHECKING
 
 import pygame.mouse
@@ -63,8 +64,7 @@ class Game:
 
     @property
     def load_rect(self) -> pygame.Rect:
-        return pygame.Rect(self.main.x_center - TITLE_W, 450 - TITLE_H, TITLE_W,
-                           2 * TITLE_H)
+        return pygame.Rect(self.main.x_center - TITLE_W, 450 - TITLE_H, TITLE_W - 5, 2 * TITLE_H)
 
     @property
     def next_rect(self) -> pygame.Rect:
@@ -89,7 +89,7 @@ class Game:
                            self.main.x_center, 350)
         draw.rect(self.canvas, 0x00aa00, self.load_rect)
         draw_centered_text(self.canvas, self.font_42.render('Load Level', True, 0xffffffff),
-                           self.main.x_center - TITLE_W // 2, 450)
+                           self.main.x_center - TITLE_W // 2 - 5, 450)
 
     def _update_board(self):
         if self.mode == mode.MENU:
@@ -187,7 +187,7 @@ class Game:
                 if self.load_rect.collidepoint(mouse_pos):
                     self.run_loader()
 
-        if self.mode == mode.EDITOR:
+        elif self.mode == mode.EDITOR:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
                 if self.menu_rect.collidepoint(mouse_pos):
@@ -199,7 +199,7 @@ class Game:
                     pygame.scrap.put('Plain text', encode_data(self.editor.board, self.editor.board_name, self.editor.board_size))
             self.editor.handle_event(event)
 
-        if self.mode == mode.LOAD:
+        elif self.mode == mode.LOAD:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
                 if self.menu_rect.collidepoint(mouse_pos):
@@ -214,7 +214,7 @@ class Game:
                         self.loader.text = ''
             self.loader.handle_event(event)
 
-        if self.mode == mode.WIN:
+        elif self.mode == mode.WIN:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
                 if self.next_rect.collidepoint(mouse_pos) and self.core.level + 1 in LEVELS:
@@ -222,7 +222,7 @@ class Game:
                 if self.menu_rect.collidepoint(mouse_pos):
                     self.main_menu()
 
-        if self.mode == mode.PLAYING:
+        elif self.mode == mode.PLAYING:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
 
