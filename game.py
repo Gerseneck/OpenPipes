@@ -67,6 +67,10 @@ class Game:
         return pygame.Rect(self.main.x_center - TITLE_W, 450 - TITLE_H, TITLE_W - 5, 2 * TITLE_H)
 
     @property
+    def random_rect(self) -> pygame.Rect:
+        return pygame.Rect(self.main.x_center + 5, 450 - TITLE_H, TITLE_W - 5, 2 * TITLE_H)
+
+    @property
     def next_rect(self) -> pygame.Rect:
         return pygame.Rect(self.main.x_center - 90 - RESULT_W, self.main.y_size - 50 - RESULT_H, 2 * RESULT_W,
                            2 * RESULT_H)
@@ -90,6 +94,9 @@ class Game:
         draw.rect(self.canvas, 0x00aa00, self.load_rect)
         draw_centered_text(self.canvas, self.font_42.render('Load Level', True, 0xffffffff),
                            self.main.x_center - TITLE_W // 2 - 5, 450)
+        draw.rect(self.canvas, 0x00aa00, self.random_rect)
+        draw_centered_text(self.canvas, self.font_42.render('Random', True, 0xffffffff),
+                           self.main.x_center + TITLE_W // 2, 450)
 
     def _update_board(self):
         if self.mode == mode.MENU:
@@ -170,8 +177,9 @@ class Game:
             self.core.connected = check_number_connected(self.core.board)
 
             if pygame.key.get_pressed()[pygame.K_r]:
+                self.mode = mode.PLAYING
                 clear_canvas(self.canvas)
-                self.run_game(self.core.level)
+                self.core.reload_level()
 
         clear_canvas(self.canvas)
         self._update_board()

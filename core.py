@@ -57,8 +57,7 @@ class Core:
 
         for i in self.board:
             self.board[i].hit_box = draw.rect(self.canvas, self.board[i].color,
-                                              pygame.Rect(x_start + box_size * i[0], y_start + box_size * i[1],
-                                                          box_size, box_size), False)
+                                              pygame.Rect(x_start + box_size * i[0], y_start + box_size * i[1], box_size, box_size), False, 25 if self.board[i] == self.selected else 0)
             if self.board[i].strict:
                 draw_centered_text(self.canvas,
                                    self.font_30.render('\u2713' if self.board[i].connected else 'X', True, 0x000000),
@@ -109,6 +108,13 @@ class Core:
         clear_canvas(self.canvas)
         self._update_board()
 
+    def reload_level(self):
+        self._clear_board()
+        self.time_start = self.main.number_tick
+        self._create_board()
+        clear_canvas(self.canvas)
+        self._update_board()
+
     def draw(self):
         self._update_board()
         
@@ -120,7 +126,7 @@ class Core:
             for i, j in self.board:
                 t1 = self.board[(i, j)]
                 if t1.hit_box.collidepoint(mouse_pos) and t1.strict and t1.color != color.gray:
-                    if t1.connected:
+                    if t1 == self.selected or t1.connected:
                         clear_color(self.board, t1.color)
                         self.selected = None
                         continue
