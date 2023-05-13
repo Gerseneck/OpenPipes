@@ -48,4 +48,19 @@ LEVELS = {
             ((2, 0), color.yellow), ((2, 3), color.yellow),
         ],
     },
+    4: {
+        'name': '9x9 Level 1',
+        'size': 9, 
+        'nodes': [
+            ((3, 2), color.blue), ((5, 8), color.blue),
+            ((7, 3), color.green), ((8, 8), color.green),
+            ((6, 1), color.cyan), ((8, 4), color.cyan),
+            ((6, 4), color.purple), ((7, 1), color.purple),
+            ((0, 3), color.brown), ((3, 8), color.brown),
+            ((2, 0), color.red), ((7, 7), color.red),
+            ((0, 1), color.orange), ((1, 2), color.orange),
+            ((3, 5), color.pink), ((4, 4), color.pink),
+            ((0, 0), color.yellow), ((7, 8), color.yellow),
+        ]
+    }
 }
