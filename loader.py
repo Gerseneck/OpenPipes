@@ -65,7 +65,7 @@ class Loader:
 
             elif event.key == pygame.K_v and event.mod & pygame.KMOD_CTRL:
                 data = pygame.scrap.get('text/plain;charset=utf-8')
-                if data is not None:
+                if data:
                     self.text += data.decode('utf-8')
 
             else:
