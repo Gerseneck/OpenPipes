@@ -1,10 +1,12 @@
 TODO:
 - add base game functionality
     - remove pipes not in the same direction
+    - add indicator for which tile is clicked
+    - fix two strict tiles right next to each other able to connect without pipes
 - add level picker
 - add score storage
 - add level editor
-    - add load and save functionality
+    - figure out how to display the data of custom levels when copying is not possible
 - make random level generator
 
 ## a flow inspired open source game.
